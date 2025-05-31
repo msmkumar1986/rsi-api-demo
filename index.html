@@ -1,77 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>RSI Calculator</title>
+    <title>RSI Calculator Demo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
+            background: #f8f9fa;
+            padding: 2em;
+            max-width: 600px;
+            margin: auto;
         }
-        textarea, input, button {
-            margin-top: 10px;
+        h1 {
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+        }
+        textarea, input {
             width: 100%;
-            padding: 10px;
-            font-size: 16px;
+            padding: 0.5em;
+            margin: 0.5em 0 1em;
         }
-        .error {
-            color: red;
-            margin-top: 10px;
+        button {
+            padding: 0.7em 1.5em;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
-        .result {
-            margin-top: 20px;
-            background: #f0f0f0;
-            padding: 15px;
+        pre {
+            background: #eee;
+            padding: 1em;
         }
     </style>
 </head>
 <body>
+
     <h1>📈 RSI Calculator</h1>
+    <p>Enter closing prices (comma-separated) and period, then click Calculate.</p>
 
-    <label for="prices">Enter Closing Prices (comma-separated):</label>
-    <textarea id="prices" rows="4" placeholder="e.g., 122.5,124.1,123.2,..."></textarea>
+    <label for="prices">Closing Prices:</label>
+    <textarea id="prices" rows="4">122.5, 124.1, 123.2, 125.3, 127.0, 128.2, 129.8, 131.4, 132.9, 134.5, 135.8, 136.2, 135.9, 137.0, 138.2</textarea>
 
-    <label for="period">Enter RSI Period (default: 14):</label>
-    <input type="number" id="period" placeholder="14" min="1" />
+    <label for="period">RSI Period:</label>
+    <input type="number" id="period" value="14" />
 
     <button onclick="calculateRSI()">Calculate RSI</button>
 
-    <div id="error" class="error"></div>
-    <div id="output" class="result"></div>
+    <h3>Result:</h3>
+    <pre id="result">...</pre>
 
     <script>
         async function calculateRSI() {
-            const pricesText = document.getElementById("prices").value;
-            const period = parseInt(document.getElementById("period").value) || 14;
-            const errorDiv = document.getElementById("error");
-            const outputDiv = document.getElementById("output");
-            errorDiv.textContent = "";
-            outputDiv.textContent = "";
+            const prices = document.getElementById('prices').value.split(',').map(p => parseFloat(p.trim()));
+            const period = parseInt(document.getElementById('period').value);
 
-            // Validate input
-            const priceArray = pricesText.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
-            if (priceArray.length < period + 1) {
-                errorDiv.textContent = `Please enter at least ${period + 1} valid numbers.`;
-                return;
-            }
+            const resBox = document.getElementById('result');
+            resBox.textContent = "Calculating...";
 
             try {
                 const response = await fetch("https://rsi-api.onrender.com/rsi", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ close: priceArray, period: period })
+                    body: JSON.stringify({ close: prices, period: period })
                 });
 
-                if (!response.ok) {
-                    throw new Error("API error: " + response.status);
-                }
-
                 const data = await response.json();
-                outputDiv.innerHTML = `<strong>RSI Result:</strong><br>${JSON.stringify(data.rsi)}`;
-            } catch (err) {
-                errorDiv.textContent = "Error: " + err.message;
+                resBox.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resBox.textContent = "Error: " + error.message;
             }
         }
     </script>
+
 </body>
 </html>
